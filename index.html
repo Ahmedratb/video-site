@@ -1,161 +1,211 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>موقع الفيديوهات</title>
 
 <style>
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Arial;
-}
-
 body{
+  font-family: Arial;
   background:#f2f2f2;
   text-align:center;
 }
 
 header{
-  background:#222;
-  color:white;
-  padding:20px;
-  font-size:24px;
-  font-weight:bold;
+  background:#111;
+  color:#fff;
+  padding:15px;
+  font-size:22px;
+}
+
+.top{
+  margin:10px;
+}
+
+button{
+  padding:10px 15px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin:5px;
 }
 
 .add{
-  margin:20px;
-}
-
-#videoInput{
-  display:none;
-}
-
-.add button{
-  background:#008000;
+  background:green;
   color:white;
-  border:0;
-  padding:12px 25px;
-  border-radius:10px;
-  font-size:18px;
-  cursor:pointer;
+}
+
+input[type="text"]{
+  padding:10px;
+  width:80%;
+  max-width:400px;
+  border-radius:8px;
+  border:1px solid #ccc;
 }
 
 .container{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:20px;
-  padding:20px;
+  gap:15px;
+  padding:15px;
 }
 
 .card{
-  background:white;
+  background:#fff;
   padding:10px;
-  border-radius:15px;
-  box-shadow:0 3px 10px #ccc;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
 video{
   width:100%;
-  max-height:300px;
   border-radius:10px;
 }
 
-.delete{
+.actions{
+  display:flex;
+  justify-content:space-between;
   margin-top:10px;
-  background:red;
-  color:white;
-  border:0;
-  padding:8px 20px;
-  border-radius:8px;
-  cursor:pointer;
 }
 
+.like{
+  background:#ddd;
+}
+
+.liked{
+  background:red;
+  color:white;
+}
+
+.delete{
+  background:#000;
+  color:white;
+}
 </style>
 
 </head>
 
 <body>
 
-<header>
-🎬 موقع الفيديوهات
-</header>
+<header>🎬 موقع الفيديوهات</header>
 
+<div class="top">
 
-<div class="add">
+<input type="text" id="search" placeholder="🔍 ابحث عن فيديو">
 
-<input type="file" id="videoInput" accept="video/*">
+<br>
 
-<button onclick="document.getElementById('videoInput').click()">
+<input type="file" id="fileInput" accept="video/*" hidden>
+
+<button class="add" onclick="document.getElementById('fileInput').click()">
 ➕ إضافة فيديو
 </button>
 
 </div>
 
-
 <div class="container" id="videos"></div>
 
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <script>
 
-const input = document.getElementById("videoInput");
-const videos = document.getElementById("videos");
+// ====== بياناتك ======
+const SUPABASE_URL = "https://qysqikpdbbeddkvhzeii.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5c3Fpa3BkYmJlZGRrdmh6ZWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5ODIzMDAsImV4cCI6MjA5NzU1ODMwMH0._CSPAx3kFd8hhKkU8IheNKAU06cqatfCaxAH9l64MzI";
 
+const supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-input.addEventListener("change", function(){
+const fileInput = document.getElementById("fileInput");
+const videosDiv = document.getElementById("videos");
+const search = document.getElementById("search");
 
-let file = this.files[0];
+// رفع فيديو
+fileInput.addEventListener("change", async function(){
 
-if(!file){
-return;
-}
+  let file = this.files[0];
+  if(!file) return;
 
+  let fileName = Date.now() + "_" + file.name;
 
-let url = URL.createObjectURL(file);
+  await supabase.storage.from("videos").upload(fileName, file);
 
+  let { data } = supabase.storage.from("videos").getPublicUrl(fileName);
 
-let card = document.createElement("div");
-card.className = "card";
+  await supabase.from("videos").insert([
+    { title: file.name, url: data.publicUrl }
+  ]);
 
-
-let video = document.createElement("video");
-video.controls = true;
-video.playsInline = true;
-video.src = url;
-
-
-let btn = document.createElement("button");
-btn.className = "delete";
-btn.innerText = "🗑️ حذف الفيديو";
-
-
-btn.onclick = function(){
-
-video.pause();
-URL.revokeObjectURL(url);
-card.remove();
-
-};
-
-
-card.appendChild(video);
-card.appendChild(btn);
-
-
-videos.appendChild(card);
-
+  loadVideos();
 
 });
 
+// لايك
+function toggleLike(id){
+  let liked = localStorage.getItem("like_"+id);
+
+  if(liked){
+    localStorage.removeItem("like_"+id);
+  } else {
+    localStorage.setItem("like_"+id,"1");
+  }
+
+  loadVideos();
+}
+
+// حذف
+async function deleteVideo(id, path){
+  await supabase.from("videos").delete().eq("id", id);
+  loadVideos();
+}
+
+// تحميل الفيديوهات
+async function loadVideos(){
+
+  videosDiv.innerHTML = "";
+
+  let { data } = await supabase
+    .from("videos")
+    .select("*")
+    .order("id", { ascending:false });
+
+  let q = search.value || "";
+
+  data
+    .filter(v => v.title.includes(q))
+    .forEach(v => {
+
+      let liked = localStorage.getItem("like_"+v.id);
+
+      let card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <video controls src="${v.url}"></video>
+        <p>${v.title}</p>
+
+        <div class="actions">
+          <button class="${liked ? 'liked' : 'like'}" onclick="toggleLike(${v.id})">
+            ❤️ لايك
+          </button>
+
+          <button class="delete" onclick="deleteVideo(${v.id})">
+            🗑️ حذف
+          </button>
+        </div>
+      `;
+
+      videosDiv.appendChild(card);
+
+    });
+
+}
+
+search.addEventListener("input", loadVideos);
+
+loadVideos();
 
 </script>
-
 
 </body>
 </html>
