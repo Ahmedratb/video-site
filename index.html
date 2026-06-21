@@ -75,22 +75,19 @@ video{
 
 // ================== بياناتك ==================
 const SUPABASE_URL = "https://qysqikpdbbeddkvhzeii.supabase.co";
+
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5c3Fpa3BkYmJlZGRrdmh6ZWlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5ODIzMDAsImV4cCI6MjA5NzU1ODMwMH0._CSPAx3kFd8hhKkU8IheNKAU06cqatfCaxAH9l64MzI";
-// ============================================
+
 
 // إنشاء الاتصال
-const supabase = window.supabase.createClient(
+const db = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
 
-  console.log("STEP 1 OK");
-console.log("SUPABASE:", supabase);
-  
-  console.log("URL:", SUPABASE_URL);
-console.log("KEY:", SUPABASE_ANON_KEY.substring(0,20));
-console.log("CLIENT:", supabase);
-  
+console.log("STEP 1 OK");
+
+
 const fileInput = document.getElementById("fileInput");
 const videosDiv = document.getElementById("videos");
 
@@ -101,12 +98,15 @@ fileInput.addEventListener("change", async function () {
   let file = this.files[0];
   if (!file) return;
 
+
   let fileName = Date.now() + "_" + file.name;
 
-  // رفع في Storage
-  const { error: uploadError } = await supabase.storage
+
+  // رفع الفيديو
+  const { error: uploadError } = await db.storage
     .from("videos")
     .upload(fileName, file);
+
 
   if (uploadError) {
     console.log(uploadError);
@@ -114,19 +114,26 @@ fileInput.addEventListener("change", async function () {
     return;
   }
 
-  // جلب الرابط
-  const { data } = supabase.storage
+
+  // رابط الفيديو
+  const { data } = db.storage
     .from("videos")
     .getPublicUrl(fileName);
 
+
   let videoUrl = data.publicUrl;
 
-  // حفظ في الجدول
-  const { error: dbError } = await supabase
+
+  // حفظ البيانات
+  const { error: dbError } = await db
     .from("videos")
     .insert([
-      { title: file.name, url: videoUrl }
+      {
+        title: file.name,
+        url: videoUrl
+      }
     ]);
+
 
   if (dbError) {
     console.log(dbError);
@@ -134,42 +141,56 @@ fileInput.addEventListener("change", async function () {
     return;
   }
 
+
+  alert("تم رفع الفيديو بنجاح");
+
   loadVideos();
 
 });
 
 
+
 // ================= عرض الفيديوهات =================
-async function loadVideos() {
+async function loadVideos(){
 
   videosDiv.innerHTML = "";
 
-  const { data, error } = await supabase
+
+  const { data, error } = await db
     .from("videos")
     .select("*")
-    .order("id", { ascending: false });
+    .order("id", { ascending:false });
 
-  if (error) {
+
+  if(error){
     console.log(error);
     return;
   }
 
-  if (!data || data.length === 0) {
+
+  if(!data || data.length === 0){
+
     videosDiv.innerHTML = "<p>لا توجد فيديوهات</p>";
     return;
+
   }
+
 
   data.forEach(v => {
 
     let card = document.createElement("div");
+
     card.className = "card";
+
 
     card.innerHTML = `
       <video controls playsinline>
         <source src="${v.url}" type="video/mp4">
       </video>
+
       <p>${v.title}</p>
     `;
+
 
     videosDiv.appendChild(card);
 
@@ -177,8 +198,8 @@ async function loadVideos() {
 
 }
 
-loadVideos();
 
+loadVideos();
 </script>
 
 </body>
