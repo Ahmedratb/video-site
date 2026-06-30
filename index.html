@@ -9,9 +9,7 @@
   body {
     background-image: url("img.jpg");
     margin: 0;
-    height: 100vh;
-    display: flex;
-  }
+    
     
 body{
   font-family: Arial;
@@ -34,8 +32,8 @@ button{
   border-radius:8px;
   cursor:pointer;
   margin:10px;
-  background:green;
-  color:white;
+  background:lightblue;
+  color:purple;
 }
 
 input[type="file"]{
@@ -77,10 +75,11 @@ video{
   
 <input type="file" id="fileInput" accept="video/*">
 
-  
+  <div align="center">
 <button onclick="document.getElementById('fileInput').click()">
 ➕ إضافة فيديو
 </button>
+  </div>
 
   
 <div class="container" id="videos"></div>
