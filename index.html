@@ -6,14 +6,21 @@
 <title> هفكر في اسم لما يخلص</title>
 
 <style>
+  body {
+    background-image: url("img.jpg");
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center; /* توسيط أفقي */
+    align-items: center;     /* توسيط رأسي */
+    
 body{
-  background-image: url("img.jpg");
   font-family: Arial;
   background:#f2f2f2;
   text-align:center;
-  margin:0;
 }
 
+    
 header{
   background:#111;
   color:#fff;
@@ -21,6 +28,7 @@ header{
   font-size:22px;
 }
 
+    
 button{
   padding:10px 15px;
   border:none;
@@ -35,6 +43,7 @@ input[type="file"]{
   display:none;
 }
 
+    
 .container{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
@@ -42,6 +51,7 @@ input[type="file"]{
   padding:15px;
 }
 
+    
 .card{
   background:#fff;
   padding:10px;
@@ -49,31 +59,41 @@ input[type="file"]{
   box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
+    
 video{
   width:100%;
   border-radius:10px;
 }
 </style>
 
+  
 </head>
 
+  
 <body>
 
+  
 <header> هفكر في اسم لما يخلص </header>
 
+  
 <input type="file" id="fileInput" accept="video/*">
 
+  
 <button onclick="document.getElementById('fileInput').click()">
 ➕ إضافة فيديو
 </button>
 
+  
 <div class="container" id="videos"></div>
 
+  
 <!-- Supabase Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  
 <script>
 
+  
 // ================== بياناتك ==================
 const SUPABASE_URL = "https://qysqikpdbbeddkvhzeii.supabase.co";
 
@@ -153,6 +173,7 @@ fileInput.addEventListener("change", async function () {
 
 // ================= عرض الفيديوهات =================
 async function loadVideos(){
+  
 
   videosDiv.innerHTML = "";
 
@@ -201,7 +222,11 @@ async function loadVideos(){
 
 
 loadVideos();
+  
+  
 </script>
 
+  
 </body>
+  
 </html>
